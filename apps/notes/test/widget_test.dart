@@ -1,30 +1,78 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:notes/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('home renders mock notes with pinned section',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const ProviderScope(child: NotesApp()));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Notes'), findsWidgets);
+    expect(find.text('Pinned'), findsOneWidget);
+    expect(find.text('Grocery list'), findsOneWidget);
+    expect(find.text('Sprint planning notes'), findsOneWidget);
+    expect(find.text('Trip to Jaipur plan'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('editor saves a note via autosave', (WidgetTester tester) async {
+    await tester.pumpWidget(const ProviderScope(child: NotesApp()));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.text('Grocery list'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(QuillEditor), findsOneWidget);
+    expect(find.byType(QuillSimpleToolbar), findsOneWidget);
+
+    // Type at the top of the document through the Quill controller.
+    final editor = tester.widget<QuillEditor>(find.byType(QuillEditor));
+    editor.controller.replaceText(0, 0, 'Updated title\n', null);
+    // Let the 800 ms autosave debounce fire.
+    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pumpAndSettle();
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Updated title'), findsOneWidget);
+  });
+
+  testWidgets('trash restore brings the note back home',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const ProviderScope(child: NotesApp()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Trash').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Duplicate shopping list'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Restore'));
+    await tester.pumpAndSettle();
+    expect(find.text('Duplicate shopping list'), findsNothing);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Duplicate shopping list'), findsOneWidget);
+  });
+
+  testWidgets('search finds a note by title', (WidgetTester tester) async {
+    await tester.pumpWidget(const ProviderScope(child: NotesApp()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.search));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'Jaipur');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Trip to Jaipur plan'), findsOneWidget);
+    expect(find.text('Grocery list'), findsNothing);
   });
 }
