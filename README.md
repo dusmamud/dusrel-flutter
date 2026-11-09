@@ -14,7 +14,9 @@ dusrel-flutter/
 │   ├── calendar/         # com.dusrel.app.calendar
 │   └── drive/            # com.dusrel.app.drive
 └── packages/
-    └── core/             # shared code, used by all 4 apps
+    ├── core/             # shared code, used by all 4 apps
+    └── l10n/             # shared localization (dusrel_l10n) — en_US, hi_IN
+                          # ARB files in lib/l10n, generated AppLocalizations
 ```
 
 Each app targets all 6 Flutter platforms: Android, iOS, Windows, macOS,

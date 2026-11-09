@@ -1,0 +1,25 @@
+name: dusrel_l10n
+resolution: workspace
+description: "Shared localization for DusRel apps (en_US, hi_IN)."
+publish_to: 'none'
+version: 0.0.1
+
+environment:
+  sdk: ^3.13.7
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  generate: true
+  uses-material-design: true
